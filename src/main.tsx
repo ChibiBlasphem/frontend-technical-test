@@ -3,7 +3,11 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./config/theme";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
@@ -11,6 +15,7 @@ import {
   AuthenticationProvider,
   useAuthentication,
 } from "./contexts/authentication";
+import { UnauthorizedError } from "./api";
 
 // Create a new router instance
 const router = createRouter({
@@ -25,7 +30,26 @@ declare module "@tanstack/react-router" {
   }
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        if (error instanceof UnauthorizedError) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+    },
+  },
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (error instanceof UnauthorizedError) {
+        localStorage.removeItem("authToken");
+        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      }
+    },
+  }),
+});
 
 function InnerApp() {
   const { state } = useAuthentication();
@@ -44,6 +68,6 @@ if (!rootElement.innerHTML) {
           </AuthenticationProvider>
         </ChakraProvider>
       </QueryClientProvider>
-    </StrictMode>,
+    </StrictMode>
   );
 }
