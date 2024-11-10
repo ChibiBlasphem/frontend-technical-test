@@ -1,5 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
+export class BadFormatError extends Error {
+  constructor() {
+    super("Bad Format");
+  }
+}
+
 export class UnauthorizedError extends Error {
   constructor() {
     super("Unauthorized");
@@ -13,6 +19,9 @@ export class NotFoundError extends Error {
 }
 
 function checkStatus(response: Response) {
+  if (response.status === 400) {
+    throw new BadFormatError();
+  }
   if (response.status === 401) {
     throw new UnauthorizedError();
   }
@@ -181,5 +190,38 @@ export async function createMemeComment(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ content }),
+  }).then((res) => checkStatus(res).json());
+}
+
+export type CreateMemeResponse = {
+  id: string;
+  authorId: string;
+  pictureUrl: string;
+  description: string;
+  commentsCount: string;
+  texts: {
+    content: string;
+    x: number;
+    y: number;
+  }[];
+  createdAt: string;
+};
+
+/**
+ * Create a new meme
+ * @param token
+ * @param memeData
+ * @returns
+ */
+export async function createMeme(
+  token: string,
+  memeData: FormData
+): Promise<CreateMemeResponse> {
+  return await fetch(`${BASE_URL}/memes`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: memeData,
   }).then((res) => checkStatus(res).json());
 }
