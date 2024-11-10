@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Flex, StackDivider, VStack } from "@chakra-ui/react";
 import { createMemeComment } from "../../api";
@@ -12,6 +12,7 @@ import { useUserQuery } from "../../queries/useUserQuery";
 import { useInView } from "react-intersection-observer";
 
 export const MemeFeedPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const token = useAuthToken();
   const {
     isLoading,
@@ -55,7 +56,16 @@ export const MemeFeedPage: React.FC = () => {
                 meme={meme}
                 user={user}
                 onSubmitComment={(memeId, content) => {
-                  mutate({ memeId, content: content });
+                  mutate(
+                    { memeId, content: content },
+                    {
+                      onSuccess: () => {
+                        queryClient.invalidateQueries({
+                          queryKey: ["memeComments", memeId],
+                        });
+                      },
+                    }
+                  );
                 }}
               />
             ))}

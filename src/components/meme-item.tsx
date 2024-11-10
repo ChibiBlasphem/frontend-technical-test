@@ -110,6 +110,7 @@ export const MemeItem = ({ meme, user, onSubmitComment }: MemeItemProps) => {
       <Collapse in={isCommentSectionOpened} animateOpacity>
         <Box mb={6}>
           <form
+            data-testid={`meme-comment-form-${meme.id}`}
             onSubmit={(event) => {
               event.preventDefault();
               if (commentContent) {
@@ -127,6 +128,7 @@ export const MemeItem = ({ meme, user, onSubmitComment }: MemeItemProps) => {
                 mr={2}
               />
               <Input
+                data-testid={`meme-comment-form-input-${meme.id}`}
                 placeholder="Type your comment here..."
                 onChange={(event) => {
                   setCommentContent(event.target.value);
