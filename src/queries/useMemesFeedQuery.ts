@@ -13,7 +13,7 @@ export const useMemesFeedQuery = () => {
     initialPageParam: 1,
     getNextPageParam: (lastPage, _pages, lastPageParam) => {
       const pageCount = Math.ceil(lastPage.total / lastPage.pageSize);
-      if (pageCount === lastPageParam) {
+      if (pageCount <= lastPageParam) {
         return undefined;
       }
       return lastPageParam + 1;
